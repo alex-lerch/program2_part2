@@ -107,7 +107,37 @@ Dictionary& Dictionary::operator=(const Dictionary& rhs)
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::addEntry(string* anEntry)
 {
+    /* variables */
+    int hashedIndex; // the initial index that the entry hashes to
+    int offset; // the number of cells we move forward if there is a collision
+    int currentArrayIndex; // the current index we are working with in theArray
 
+    // increase the size by 1 and rehash if theArray will be over 50 percent full
+        if (arrayCapacity/++arraySize < 2) {rehash();}
+
+    // find hashedIndex
+    hashedIndex = hash(*anEntry, arrayCapacity);
+
+    // if the cell of the array at the hashedIndex is empty
+    if (theArray[hashedIndex] == nullptr) {
+        theArray[hashedIndex] = new std::string(*anEntry);
+    }
+    else { // the cell of the array at the hashedIndex is not empty
+
+        // find offset
+        offset = calculateOffset(*anEntry, arrayCapacity);
+
+        // set the currentArrayIndex to where our original hashedIndex is
+        currentArrayIndex = hashedIndex;
+
+        // search for an empty space to put the new entry
+        while (theArray[currentArrayIndex] != nullptr) { // while the cell is not empty
+            currentArrayIndex = (currentArrayIndex + offset) % arrayCapacity;
+        }
+
+        // add the new entry to the array
+        theArray[currentArrayIndex] = new std::string(*anEntry);
+    }
 }
 
 
@@ -227,4 +257,95 @@ void Dictionary::copy(const Dictionary& orig) {
             theArray[arrayIndex] = new std::string(*(orig.theArray[arrayIndex]));
         }
     }
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------*
+ *                                                                                                         *
+ *   Function Name: rehash                                                                                 *
+ *                                                                                                         *
+ *   Description:                                                                                          *
+ *      grows the hash table and reassigns old hash table entries                                          *
+ *                                                                                                         *
+ *   Returns: n/a                                                                                          *
+ *                                                                                                         *
+ *   Precondition: none                                                                                    *
+ *                                                                                                         *
+ *   Postcondition: none                                                                                   *
+ *                                                                                                         *
+ *---------------------------------------------------------------------------------------------------------*/
+void Dictionary::rehash() {
+    int tableSizesIndex = 0; // the current index of tableSizes that we are working with
+    int newCapacity; // the new theArray capacity
+
+    // find new capacity for theArray
+    do {
+        newCapacity = tableSizes[++tableSizesIndex];
+    } while (tableSizes[tableSizesIndex] <= arrayCapacity);
+
+    // create temp array used to move over items from the old array 
+    StringPtr* tempArray = new StringPtr[newCapacity];
+
+    // copy over items from the old array to tempArray
+    for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
+        if (theArray[arrayIndex] != nullptr) {
+            addEntry(new std::string(*(theArray[arrayIndex])));
+        }
+    }
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------*
+ *                                                                                                         *
+ *   Function Name: hash                                                                                   *
+ *                                                                                                         *
+ *   Description:                                                                                          *
+ *      hash routine for string objects                                                                    *
+ *                                                                                                         *
+ *   Returns: the index that the input string hashes to                                                    *
+ *                                                                                                         *
+ *   Precondition: none                                                                                    *
+ *                                                                                                         *
+ *   Postcondition: none                                                                                   *
+ *                                                                                                         *
+ *---------------------------------------------------------------------------------------------------------*/
+int Dictionary::hash(const std::string& word, int arrayCapacity) {
+    int hashVal = 0;
+
+    for (char ch : word) {
+        hashVal = 37 * hashVal + ch;
+    }
+
+    return hashVal % arrayCapacity;
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------*
+ *                                                                                                         *
+ *   Function Name: secondHash                                                                             *
+ *                                                                                                         *
+ *   Description:                                                                                          *
+ *      second hash function used to calculate an offset                                                   *
+ *                                                                                                         *
+ *   Returns: the offset that the input string hashes to                                                   *
+ *                                                                                                         *
+ *   Precondition: none                                                                                    *
+ *                                                                                                         *
+ *   Postcondition: none                                                                                   *
+ *                                                                                                         *
+ *---------------------------------------------------------------------------------------------------------*/
+int Dictionary::calculateOffset(const std::string& word, int arrayCapacity) {
+    int secondHashTableSize; // the tableSize just below theArray's current capacity
+    int doubleHashNumsIndex = 0; // the current index of the doubleHashNums array
+
+    // find the correct secondHashTableSize
+    do {
+        secondHashTableSize = doubleHashNums[doubleHashNumsIndex++];
+    } while (doubleHashNums[doubleHashNumsIndex] < arrayCapacity);
+
+    // return the offset
+    return (hash(word, arrayCapacity) % secondHashTableSize);
 }

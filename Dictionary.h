@@ -29,17 +29,6 @@ typedef std::string* StringPtr;
 
 
 /*---------------------------------------------------------------------------------------------------------*
- *   Constants                                                                                             *
- *---------------------------------------------------------------------------------------------------------*/
-// prime numbers used for expanding the size of the hash table
-const int tableSizes[14] = {101, 211, 431, 863, 1733, 3469, 6947, 13901, 27803, 55609, 111227, 222461,
-                                444929, 889871};
-
-// prime numbers used with the second hash function
-const int doubleHashNums[14] = {97, 199, 421, 859, 1723, 3467, 6917, 13883, 27799, 55603, 111217, 222437,
-                                    444901, 889829};
-
-/*---------------------------------------------------------------------------------------------------------*
  *                                                                                                         *
  *   Class Interface: Dictionary                                                                           *
  *                                                                                                         *
@@ -54,9 +43,6 @@ class Dictionary
  *   Private Member Variables and structs                                                                  *
  *---------------------------------------------------------------------------------------------------------*/
 private:
-    
-    // the string data of the array cell
-    StringPtr data;
 
     // the array that stores the data items
     StringPtr* theArray;
@@ -119,8 +105,14 @@ private:
     // recursive helper for printDictionaryInOrder
     void printInOrder(std::ostream& outputStream, Node* curNode) const;
 
-    // rehashes the array 
+    // grows the hash table and reassigns old hash table entries 
+    void rehash();
 
+    // hash routine for string objects
+    int hash(const std::string& word, int arrayCapacity);
+
+    // second hash function used to calculate an offset
+    int calculateOffset(const std::string& word, int arrayCapacity);
 };
 
 // closing file definition
