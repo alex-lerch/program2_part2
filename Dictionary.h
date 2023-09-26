@@ -23,44 +23,58 @@
 #define DICTIONARY_H
 
 /*---------------------------------------------------------------------------------------------------------*
+ *   Type Definitions                                                                                      *
+ *---------------------------------------------------------------------------------------------------------*/
+typedef std::string* StringPtr;
+
+
+/*---------------------------------------------------------------------------------------------------------*
+ *   Constants                                                                                             *
+ *---------------------------------------------------------------------------------------------------------*/
+// prime numbers used for expanding the size of the hash table
+const int tableSizes[14] = {101, 211, 431, 863, 1733, 3469, 6947, 13901, 27803, 55609, 111227, 222461,
+                                444929, 889871};
+
+// prime numbers used with the second hash function
+const int doubleHashNums[14] = {97, 199, 421, 859, 1723, 3467, 6917, 13883, 27799, 55603, 111217, 222437,
+                                    444901, 889829};
+
+/*---------------------------------------------------------------------------------------------------------*
  *                                                                                                         *
  *   Class Interface: Dictionary                                                                           *
  *                                                                                                         *
  *   Description:                                                                                          *
- *      An dictionary created using a basic binary search tree                                             *
+ *      An dictionary created using a hash table                                                           *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
 class Dictionary
 {
 
 /*---------------------------------------------------------------------------------------------------------*
- *   Private Structures and Member Variables                                                               *
+ *   Private Member Variables and structs                                                                  *
  *---------------------------------------------------------------------------------------------------------*/
 private:
-    struct Node // struct because I want everything to be public within the Node
-    {
-        std::string* data; // the data being stored in the node
-        Node* left; // the left subtree of the node
-        Node* right; // the right subtree of the node
-        int height; // the height of the node
+    
+    // the string data of the array cell
+    StringPtr data;
 
-        // constructor
-        Node(std::string*& theData): data(theData), left(nullptr), right(nullptr), height(0) {}
-    };
+    // the array that stores the data items
+    StringPtr* theArray;
 
-    /* private instance variables */
-    Node* root;
+    // the current size of the array
+    int arraySize;
+
+    // the current capacity of the array
+    int arrayCapacity;
 
 
 /*---------------------------------------------------------------------------------------------------------*
  *   Public Member Functions                                                                               *
  *---------------------------------------------------------------------------------------------------------*/
 public:
-    // definition for the allowed imbalance of the tree
-    #define ALLOWED_IMBALANCE 1
-
+    
     // Constructor
-    Dictionary(): root(nullptr) {}
+    Dictionary();
 
     // Copy constructor
     Dictionary(const Dictionary& orig) { copy(orig); }
@@ -72,7 +86,7 @@ public:
     Dictionary& operator=(const Dictionary& rhs);
 
     // Check to see if the Dictionary isEmpty
-    bool isEmpty() const { return root == nullptr; }
+    bool isEmpty() const { return arraySize == 0; }
 
     // Add an entry
     // Precondition: the dictionary must not have the identical string already stored in the dictionary
@@ -97,44 +111,16 @@ public:
  *---------------------------------------------------------------------------------------------------------*/
 private:
     // clear helper method for copy constructor and assignment operator
-    void clear() { clear(root); }
-
-    // recursive clear helper
-    void clear(Node* node);
+    void clear();
 
     // copy helper method for destructor and assignment operator
-    void copy(const Dictionary& orig) { this->root = copy(orig.root); }
-
-    // recursive copy helper
-    Node* copy(Node* origNode);
-
-    // recursive helper method for insertion
-    void insert(std::string* value, Node*& curPtr);
+    void copy(const Dictionary& orig);
 
     // recursive helper for printDictionaryInOrder
     void printInOrder(std::ostream& outputStream, Node* curNode) const;
 
-    // tree printer helper -- recursive function to print the tree structure
-    void printTree(std::ostream& outputStream, Node* curNode, int depth) const;
+    // rehashes the array 
 
-    // rotates nodes and balances tree until AVL conditions are satisfied
-    void balance(Node*& root);
-
-    // returns the height of the node or -1 if the node is nullptr
-    int height(Node* node) {return node == nullptr ? -1 : node->height;}
-
-    // single rotation with the left child
-    void rotateWithLeftChild(Node*& node);
-
-    // double rotation with the left child implemented as two single rotations
-    void doubleWithLeftChild(Node*& node);
-
-    // single rotation with the right child
-    void rotateWithRightChild(Node*& node);
-
-    // double rotation with the right child implemented as two single rotations
-    void doubleWithRightChild(Node*& node);
-    
 };
 
 // closing file definition

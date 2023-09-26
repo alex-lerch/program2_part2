@@ -9,21 +9,6 @@
  *   Authors: Mary Elaine Califf and Alex Lerch                                                            *
  *                                                                                                         *
  *   Member Functions:                                                                                     *
- *      operator=                  help with dynamic memory management                                     *
- *      addEntry                   add an entry                                                            *
- *      findEntry                  determine whether the string is in the dictionary                       *
- *      printDictionaryInOrder     print entries in order                                                  *
- *      printDictionaryKeys        prints keys only, demonstrates dictionary structure                     *
- *      clear                      recursive clear helper                                                  *
- *      copy                       recursive copy helper                                                   *
- *      insert                     recursive helper method for insertion                                   *
- *      printInOrder               recursive helper for printDictionaryInOrder                             *
- *      printTree                  printDictionaryKeys helper, prints tree structure                       *
- *      balance                    rotates nodes and balances tree                                         *
- *      rotateWithLeftChild        single rotation with the left child                                     *
- *      doubleWithLeftChild        double rotation with the left child                                     *
- *      rotateWithRightChild       single rotation with the right child                                    *
- *      doubleWithRightChild       double rotation with the right child                                    *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
 
@@ -33,6 +18,7 @@
 #include "Dictionary.h"
 #include <iostream> 
 
+
 /*---------------------------------------------------------------------------------------------------------*
  *   Namespaces                                                                                            *
  *---------------------------------------------------------------------------------------------------------*/
@@ -40,8 +26,44 @@ using namespace std;
 
 
 /*---------------------------------------------------------------------------------------------------------*
+ *   Constants                                                                                             *
+ *---------------------------------------------------------------------------------------------------------*/
+// prime numbers used for expanding the size of the hash table
+const int tableSizes[14] = {101, 211, 431, 863, 1733, 3469, 6947, 13901, 27803, 55609, 111227, 222461,
+                                444929, 889871};
+
+// prime numbers used with the second hash function
+const int doubleHashNums[14] = {97, 199, 421, 859, 1723, 3467, 6917, 13883, 27799, 55603, 111217, 222437,
+                                    444901, 889829};
+
+
+/*---------------------------------------------------------------------------------------------------------*
  *   Member functions and operator function definitions                                                    *
  *---------------------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------------------*
+ *                                                                                                         *
+ *   Function Name: Dictionary                                                                             *
+ *                                                                                                         *
+ *   Description:                                                                                          *
+ *      default constructor                                                                                *
+ *                                                                                                         *
+ *   Returns: n/a                                                                                          *
+ *                                                                                                         *
+ *---------------------------------------------------------------------------------------------------------*/
+Dictionary::Dictionary() {
+    // initialize the array of string pointers
+    theArray = new StringPtr[tableSizes[0]] {nullptr};
+
+    // set the initial size to 0
+    arraySize = 0;
+
+    // set the initial capacity
+    arrayCapacity = tableSizes[0];
+}
+
+
 
 /*---------------------------------------------------------------------------------------------------------*
  *                                                                                                         *
@@ -55,11 +77,15 @@ using namespace std;
  *---------------------------------------------------------------------------------------------------------*/
 Dictionary& Dictionary::operator=(const Dictionary& rhs)
 {
-    if (this->root != rhs.root) //comparing the tree roots because that's as effective as comparing the object addresses here
-    {
-        clear();           // delete the current tree;
-        copy(rhs); // copy rhs's tree into this
+    // if the objects are not the same
+    if (this != &rhs) {
+        // delete the data first
+        clear();
+        
+        // copy the data from rhs to this object
+        copy(rhs);
     }
+    // return this object
     return *this;
 }
 
@@ -81,8 +107,7 @@ Dictionary& Dictionary::operator=(const Dictionary& rhs)
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::addEntry(string* anEntry)
 {
-    // call private recursive insert method
-    insert(anEntry, root);
+
 }
 
 
@@ -103,19 +128,7 @@ void Dictionary::addEntry(string* anEntry)
  *---------------------------------------------------------------------------------------------------------*/
 bool Dictionary::findEntry(const string& key) const
 {
-    Node* curNode = root;
-    while (curNode && *(curNode->data) != key)
-    {
-        if (*(curNode->data) > key)
-        {
-            curNode = curNode->left;
-        }
-        else
-        {
-            curNode = curNode->right;
-        }
-    }
-    return curNode != nullptr;
+
 }
 
 
@@ -136,8 +149,7 @@ bool Dictionary::findEntry(const string& key) const
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::printDictionaryInOrder(ostream& outputStream) const
 {
-    if (root)
-        printInOrder(outputStream, root);
+
 }
 
 
@@ -158,8 +170,7 @@ void Dictionary::printDictionaryInOrder(ostream& outputStream) const
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::printDictionaryKeys(ostream& outputStream) const
 {
-    if (root)
-        printTree(outputStream, root, 0);
+    outputStream << "whatever";
 }
 
 
@@ -169,9 +180,7 @@ void Dictionary::printDictionaryKeys(ostream& outputStream) const
  *   Function Name: clear                                                                                  *
  *                                                                                                         *
  *   Description:                                                                                          *
- *      this is doing a postOrder traversal of the tree, deleting the string and then Node in each node    *
- *      of the tree the Dictionary is taking responsibility for the entry objects, because they have to    *
- *      be dynamically allocated and only the tree has them all. recursive clear helper                    *
+ *      clear helper method for copy constructor and assignment operator                                   *
  *                                                                                                         *
  *   Returns: n/a                                                                                          *
  *                                                                                                         *
@@ -180,15 +189,13 @@ void Dictionary::printDictionaryKeys(ostream& outputStream) const
  *   Postcondition: none                                                                                   *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::clear(Node* node)
-{
-    if (node)
-    {
-        clear(node->left);
-        clear(node->right);
-        delete node->data;
-        delete node;
+void Dictionary::clear() {
+    for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
+        if (theArray[arrayIndex] != nullptr) {
+            delete theArray[arrayIndex];
+        }
     }
+    delete[] theArray;
 }
 
 
@@ -198,48 +205,7 @@ void Dictionary::clear(Node* node)
  *   Function Name: copy                                                                                   *
  *                                                                                                         *
  *   Description:                                                                                          *
- *      copy helper method for destructor and assignment operator. this is doing a postOrder traversal     *
- *      of the original tree, making a copy of each node                                                   *
- *                                                                                                         *
- *   Returns: nullptr if origNode is null, the copied origNode otherwise                                   *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-Dictionary::Node* Dictionary::copy(Dictionary::Node* origNode)
-{
-    if (origNode)
-    {
-        // recursively copy the left and right subtrees
-        Node* newLeft = copy(origNode->left);
-        Node* newRight = copy(origNode->right);
-
-        string* newData = new string(*(origNode->data)); // copies the Entry from the original node
-        int newHeight = origNode->height;
-
-        Node* node = new Node(newData);
-        node->height = newHeight;
-        node->left = newLeft;
-        node->right = newRight;
-
-        return node;
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: insert                                                                                 *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      recursive helper method for insertion                                                              *
+ *      copy helper method for destructor and assignment operator                                          *
  *                                                                                                         *
  *   Returns: n/a                                                                                          *
  *                                                                                                         *
@@ -248,231 +214,17 @@ Dictionary::Node* Dictionary::copy(Dictionary::Node* origNode)
  *   Postcondition: none                                                                                   *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::insert(string* value, Node*& curPtr)
-{
-    if (!curPtr) // this is where the item goes
-        curPtr = new Node(value);
-    else if (*value < *(curPtr->data)) // heading left
-        insert(value, curPtr->left);
-    else // heading right
-        insert(value, curPtr->right);
+void Dictionary::copy(const Dictionary& orig) {
 
-    // balances the tree as it navigates back up the tree
-    balance(curPtr);
-}
+    /* copy member variables */
+    arraySize = orig.arraySize;
+    arrayCapacity = orig.arrayCapacity;
 
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: printInOrder                                                                           *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      recursive helper for printDictionaryInOrder. this is doing an inOrder traversal of the tree,       *
- *      calling printEntry on each entry in the tree                                                       *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::printInOrder(ostream& outputStream, Node* curNode) const
-{
-    string endOfLine = "\n"; // dealing with weird compiler issue
-    if (curNode->left)
-        printInOrder(outputStream, curNode->left);
-    outputStream << (*(curNode->data)) << endOfLine;
-    if (curNode->right)
-        printInOrder(outputStream, curNode->right);
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: printTree                                                                              *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      printDictionaryKeys helper, prints tree structure. this is doing a preOrder traversal of the       *
- *      tree, printing it out in a way that shows the structure                                            *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::printTree(ostream& outputStream, Node* curNode, int depth) const
-{
-    string padding = "  "; // dealing with weird compiler error
-    string endOfLine = "\n";
-    for (int i = 0; i < depth; i++)
-    {
-        outputStream << padding;
-    }
-    outputStream << *(curNode->data) << endOfLine;
-    if (curNode->left)
-    {
-        printTree(outputStream, curNode->left, depth + 1);
-    }
-    if (curNode->right)
-    {
-        printTree(outputStream, curNode->right, depth + 1);
-    }
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: balance                                                                                *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      rotates nodes and balances tree until AVL conditions are satisfied.                                *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::balance(Node*& root) {
-    /* if the root is nullptr */
-    if (!root) {
-        return;
-    }
-    /* if there is an imbalance from the left subtree of root */
-    if ( height(root->left) - height(root->right) > ALLOWED_IMBALANCE ) {
-
-        // if the imbalance is from the left child of the left subtree
-        if ( height(root->left->left) >= height(root->left->right) ) {
-            rotateWithLeftChild(root);
-        }
-        else { // the imbalance is from the right child of the left subtree
-            doubleWithLeftChild(root);
+    // copy the contents of the original array into this array
+    theArray = new StringPtr[orig.arrayCapacity];
+    for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
+        if (orig.theArray[arrayIndex] != nullptr) {
+            theArray[arrayIndex] = new std::string(*(orig.theArray[arrayIndex]));
         }
     }
-    else { // check the balance factor to the right of root
-
-        // if there is an imbalance from the right subtree of root
-        if ( height(root->right) - height(root->left) > ALLOWED_IMBALANCE ) {
-
-            // if the imbalance is from the right child of the right subtree
-            if ( height(root->right->right) >= height(root->right->left) ) {
-                rotateWithRightChild(root);
-            }
-            else { // the imbalance is from the left child of the right subtree
-                doubleWithRightChild(root);
-            }
-        }
-    }
-    // set the new height
-    root->height = max( height(root->left), height(root->right) ) + 1;
-
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: rotateWithLeftChild                                                                    *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      single rotation with the left child                                                                *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::rotateWithLeftChild(Node*& node) {
-    /* rotate the left child */
-    Node* child = node->left;
-    node->left = child->right;
-    child->right = node;
-
-    /* set the new heights for node and child */
-    node->height = max( height(node->left), height(node->right) ) + 1;
-    child->height = max( height(child->left), height(child->right) ) + 1;
-
-    // set the left subtree pointer of node's parent to child
-    node = child;
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: doubleWithLeftChild                                                                    *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      double rotation with the left child implemented as two single rotations                            *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::doubleWithLeftChild(Node*& node) {
-    rotateWithRightChild(node->left);
-    rotateWithLeftChild(node);
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: rotateWithRightChild                                                                   *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      single rotation with the right child                                                               *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::rotateWithRightChild(Node*& node) {
-    /* rotate the right child */
-    Node* child = node->right;
-    node->right = child->left;
-    child->left = node;
-
-    /* set the new heights for node and child */
-    node->height = max( height(node->left), height(node->right) ) + 1;
-    child->height = max( height(child->left), height(child->right) ) + 1;
-
-    // set the right subtree pointer of node's parent to child
-    node = child;
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------*
- *                                                                                                         *
- *   Function Name: doubleWithRightChild                                                                   *
- *                                                                                                         *
- *   Description:                                                                                          *
- *      double rotation with the right child implemented as two single rotations                           *
- *                                                                                                         *
- *   Returns: n/a                                                                                          *
- *                                                                                                         *
- *   Precondition: none                                                                                    *
- *                                                                                                         *
- *   Postcondition: none                                                                                   *
- *                                                                                                         *
- *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::doubleWithRightChild(Node*& node) {
-    rotateWithLeftChild(node->right);
-    rotateWithRightChild(node);
 }
