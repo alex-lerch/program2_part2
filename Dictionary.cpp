@@ -4,7 +4,7 @@
  *   File: Dictionary.cpp                                                                                  *
  *                                                                                                         *
  *   Description:                                                                                          *
- *      Implementation file for the Dictionary class. Stores data in an AVL search tree                    *
+ *      Implementation file for the Dictionary class. Stores data in a hash table                          *
  *                                                                                                         *
  *   Authors: Mary Elaine Califf and Alex Lerch                                                            *
  *                                                                                                         *

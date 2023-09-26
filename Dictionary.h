@@ -4,7 +4,7 @@
  *   File: Dictionary.h                                                                                    *
  *                                                                                                         *
  *   Description:                                                                                          *
- *      A dictionary created using an AVL tree                                                             *
+ *      A dictionary created using a hash table                                                            *
  *                                                                                                         *
  *   Authors: Mary Elaine Califf and Alex Lerch                                                            *
  *                                                                                                         *
