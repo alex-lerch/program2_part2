@@ -53,12 +53,15 @@ private:
     // the current capacity of the array
     int arrayCapacity;
 
+    // stores the correct index for the table sizes
+    int tableSizesIndex;
+
 
 /*---------------------------------------------------------------------------------------------------------*
  *   Public Member Functions                                                                               *
  *---------------------------------------------------------------------------------------------------------*/
 public:
-    
+
     // Constructor
     Dictionary();
 
@@ -102,17 +105,17 @@ private:
     // copy helper method for destructor and assignment operator
     void copy(const Dictionary& orig);
 
-    // recursive helper for printDictionaryInOrder
-    void printInOrder(std::ostream& outputStream, Node* curNode) const;
-
     // grows the hash table and reassigns old hash table entries 
     void rehash();
 
     // hash routine for string objects
-    int hash(const std::string& word, int arrayCapacity);
+    unsigned int hash(const std::string& word, int arrayCapacity) const;
 
     // second hash function used to calculate an offset
-    int calculateOffset(const std::string& word, int arrayCapacity);
+    int calculateOffset(const std::string& word, int arrayCapacity) const;
+
+    void addEntry(StringPtr anEntry, StringPtr* theArray);
+
 };
 
 // closing file definition

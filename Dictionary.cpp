@@ -61,6 +61,9 @@ Dictionary::Dictionary() {
 
     // set the initial capacity
     arrayCapacity = tableSizes[0];
+
+    // initiate tableSizeIndex
+    tableSizesIndex = 0;
 }
 
 
@@ -107,37 +110,11 @@ Dictionary& Dictionary::operator=(const Dictionary& rhs)
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::addEntry(string* anEntry)
 {
-    /* variables */
-    int hashedIndex; // the initial index that the entry hashes to
-    int offset; // the number of cells we move forward if there is a collision
-    int currentArrayIndex; // the current index we are working with in theArray
-
     // increase the size by 1 and rehash if theArray will be over 50 percent full
-        if (arrayCapacity/++arraySize < 2) {rehash();}
+    if ((arrayCapacity/++arraySize) < 2) {rehash();}
 
-    // find hashedIndex
-    hashedIndex = hash(*anEntry, arrayCapacity);
-
-    // if the cell of the array at the hashedIndex is empty
-    if (theArray[hashedIndex] == nullptr) {
-        theArray[hashedIndex] = new std::string(*anEntry);
-    }
-    else { // the cell of the array at the hashedIndex is not empty
-
-        // find offset
-        offset = calculateOffset(*anEntry, arrayCapacity);
-
-        // set the currentArrayIndex to where our original hashedIndex is
-        currentArrayIndex = hashedIndex;
-
-        // search for an empty space to put the new entry
-        while (theArray[currentArrayIndex] != nullptr) { // while the cell is not empty
-            currentArrayIndex = (currentArrayIndex + offset) % arrayCapacity;
-        }
-
-        // add the new entry to the array
-        theArray[currentArrayIndex] = new std::string(*anEntry);
-    }
+    // add the new entry
+    addEntry(anEntry, theArray);
 }
 
 
@@ -158,7 +135,43 @@ void Dictionary::addEntry(string* anEntry)
  *---------------------------------------------------------------------------------------------------------*/
 bool Dictionary::findEntry(const string& key) const
 {
+    /* variables */
+    int hashedIndex; // the initial index that the entry hashes to
+    int offset; // the number of cells we move forward if there is a collision
+    int currentArrayIndex; // the current index we are working with in theArray
 
+    // find hashedIndex
+    hashedIndex = hash(key, arrayCapacity);
+
+    // if the cell of the array at the hashedIndex is empty
+    if (theArray[hashedIndex] == nullptr) {
+        return false;
+    }
+    else { // the cell of the array at the hashedIndex is not empty
+
+        // if the word at the hashedIndex is the word we're looking for
+        if (*(theArray[hashedIndex]) == key) {
+            return true;
+        }
+        else { // the word at the hashedIndex of theArray is not the word we're looking for
+            // find offset
+            offset = calculateOffset(key, arrayCapacity);
+
+            // set the currentArrayIndex to where our original hashedIndex is
+            currentArrayIndex = hashedIndex;
+
+            // search for an empty space or the key we're tasked with finding
+            while ( ( theArray[currentArrayIndex] != nullptr ) || ( *(theArray[currentArrayIndex]) != key ) ) {
+                currentArrayIndex = (currentArrayIndex + offset) % arrayCapacity;
+            }
+            if (theArray[currentArrayIndex] == nullptr) { // if the word is not in the dictionary
+                return false;
+            }
+            else { // the word was found
+                return true;
+            }
+        }
+    }
 }
 
 
@@ -200,7 +213,19 @@ void Dictionary::printDictionaryInOrder(ostream& outputStream) const
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::printDictionaryKeys(ostream& outputStream) const
 {
-    outputStream << "whatever";
+
+    //asl debug
+    std::cout << "in printDictionaryKeys" << std::endl;
+
+    for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
+
+        if (theArray[arrayIndex] != nullptr) {
+            outputStream << arrayIndex << ": " << *(theArray[arrayIndex]) << "\n";
+        }
+        else {
+            outputStream << arrayIndex << ": \n";
+        }
+    }
 }
 
 
@@ -251,7 +276,7 @@ void Dictionary::copy(const Dictionary& orig) {
     arrayCapacity = orig.arrayCapacity;
 
     // copy the contents of the original array into this array
-    theArray = new StringPtr[orig.arrayCapacity];
+    theArray = new StringPtr[orig.arrayCapacity] {nullptr};
     for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
         if (orig.theArray[arrayIndex] != nullptr) {
             theArray[arrayIndex] = new std::string(*(orig.theArray[arrayIndex]));
@@ -276,13 +301,15 @@ void Dictionary::copy(const Dictionary& orig) {
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::rehash() {
-    int tableSizesIndex = 0; // the current index of tableSizes that we are working with
+
+    //asl debug
+    std::cout << "\n\n\njust entered rehash function\n\n" << std::endl;
+
     int newCapacity; // the new theArray capacity
 
+
     // find new capacity for theArray
-    do {
-        newCapacity = tableSizes[++tableSizesIndex];
-    } while (tableSizes[tableSizesIndex] <= arrayCapacity);
+    newCapacity = tableSizes[++tableSizesIndex];
 
     // create temp array used to move over items from the old array 
     StringPtr* tempArray = new StringPtr[newCapacity];
@@ -290,9 +317,20 @@ void Dictionary::rehash() {
     // copy over items from the old array to tempArray
     for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
         if (theArray[arrayIndex] != nullptr) {
-            addEntry(new std::string(*(theArray[arrayIndex])));
+            addEntry(theArray[arrayIndex], tempArray);
         }
     }
+
+    // clear the dynamic data from theArray
+    for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
+        if (theArray[arrayIndex] != nullptr) {
+            delete theArray[arrayIndex];
+        }
+    }
+
+    // transfer which array theArray points to
+    theArray = tempArray;
+
 }
 
 
@@ -311,8 +349,8 @@ void Dictionary::rehash() {
  *   Postcondition: none                                                                                   *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
-int Dictionary::hash(const std::string& word, int arrayCapacity) {
-    int hashVal = 0;
+unsigned int Dictionary::hash(const std::string& word, int arrayCapacity) const {
+    unsigned int hashVal = 0;
 
     for (char ch : word) {
         hashVal = 37 * hashVal + ch;
@@ -337,15 +375,89 @@ int Dictionary::hash(const std::string& word, int arrayCapacity) {
  *   Postcondition: none                                                                                   *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
-int Dictionary::calculateOffset(const std::string& word, int arrayCapacity) {
-    int secondHashTableSize; // the tableSize just below theArray's current capacity
-    int doubleHashNumsIndex = 0; // the current index of the doubleHashNums array
-
-    // find the correct secondHashTableSize
-    do {
-        secondHashTableSize = doubleHashNums[doubleHashNumsIndex++];
-    } while (doubleHashNums[doubleHashNumsIndex] < arrayCapacity);
+int Dictionary::calculateOffset(const std::string& word, int arrayCapacity) const{
 
     // return the offset
-    return (hash(word, arrayCapacity) % secondHashTableSize);
+    return ((hash(word, arrayCapacity) % doubleHashNums[tableSizesIndex]) + 1);
+}
+
+/*---------------------------------------------------------------------------------------------------------*
+ *                                                                                                         *
+ *   Function Name: addEntry(anEntry, theArray)                                                            *
+ *                                                                                                         *
+ *   Description:                                                                                          *
+ *      helper method for addEntry                                                                         *
+ *                                                                                                         *
+ *   Returns: n/a                                                                                          *
+ *                                                                                                         *
+ *   Precondition: none                                                                                    *
+ *                                                                                                         *
+ *   Postcondition: none                                                                                   *
+ *                                                                                                         *
+ *---------------------------------------------------------------------------------------------------------*/
+void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray) {
+
+    //asl debug
+    std::cout << "\nin addEntry helper method with '" << *anEntry << "'" << std::endl; 
+
+    /* variables */
+    int hashedIndex; // the initial index that the entry hashes to
+    int offset; // the number of cells we move forward if there is a collision
+    int currentArrayIndex; // the current index we are working with in theArray
+
+    // find hashedIndex
+    hashedIndex = hash(*anEntry, arrayCapacity);
+
+    //asl debug
+    std::cout << "hashedIndex for '" << *anEntry << "' is " << hashedIndex << std::endl;
+
+    // if the cell of the array at the hashedIndex is empty
+    if (theArray[hashedIndex] == nullptr) {
+
+        // asl debug
+        std::cout << "no collision for '" << *anEntry << "'" << std::endl;
+
+        theArray[hashedIndex] = anEntry;
+
+        //asl debug
+        std::cout << *anEntry << "added " << *theArray[hashedIndex] << " to array at index " << hashedIndex << std::endl;
+    }
+    else { // the cell of the array at the hashedIndex is not empty
+
+        //asl debug
+        std::cout << "collision occured at index " << hashedIndex << " for '" << *anEntry << "'" << std::endl;
+
+        // find offset
+        offset = calculateOffset(*anEntry, arrayCapacity);
+
+        //asl debug
+        std::cout << "offset for '" << *anEntry << " just calculated and it is " << offset << std::endl;
+
+        // set the currentArrayIndex to where our original hashedIndex is
+        currentArrayIndex = hashedIndex;
+
+        //asl debug
+        std::cout << "currentArrayIndex is assigned from hashedIndex which is " << hashedIndex << std::endl;
+
+        // search for an empty space to put the new entry
+        while (theArray[currentArrayIndex] != nullptr) { // while the cell is not empty
+
+            //asl debug
+            std::cout << "just checked index " << currentArrayIndex << " and there was something there so we move to the next location" << std::endl;
+
+            currentArrayIndex = (currentArrayIndex + offset) % arrayCapacity;
+
+            //asl debug
+            std::cout << "just moved to next location which is " << currentArrayIndex << std::endl;
+        }
+
+        //asl debug
+        std::cout << "found an empty space for '" << *anEntry << "' at index " << currentArrayIndex << std::endl;
+
+        // add the new entry to the array
+        theArray[currentArrayIndex] = anEntry;
+
+        //asl debug
+        std::cout << "just added '" << *anEntry << "' to the array at index " << currentArrayIndex << ". now, theArray[" << currentArrayIndex << "] = " << *theArray[currentArrayIndex] << std::endl;
+    }
 }

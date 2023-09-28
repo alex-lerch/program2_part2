@@ -1,0 +1,135 @@
+
+in addEntry helper method with 'firstWord'
+hashedIndex for 'firstWord' is 1
+no collision for 'firstWord'
+firstWordadded firstWord to array at index 1
+
+in addEntry helper method with 'goodStuff'
+hashedIndex for 'goodStuff' is 23
+no collision for 'goodStuff'
+goodStuffadded goodStuff to array at index 23
+
+in addEntry helper method with 'abc'
+hashedIndex for 'abc' is 67
+no collision for 'abc'
+abcadded abc to array at index 67
+
+in addEntry helper method with 'someWord'
+hashedIndex for 'someWord' is 96
+no collision for 'someWord'
+someWordadded someWord to array at index 96
+assignment operator just used to create thirdDict from secondDict
+thirdDict is 
+in printDictionaryKeys
+0: 
+1: firstWord
+2: 
+3: 
+4: 
+5: 
+6: 
+7: 
+8: 
+9: 
+10: 
+11: 
+12: 
+13: 
+14: 
+15: 
+16: 
+17: 
+18: 
+19: 
+20: 
+21: 
+22: 
+23: goodStuff
+24: 
+25: 
+26: 
+27: 
+28: 
+29: 
+30: 
+31: 
+32: 
+33: 
+34: 
+35: 
+36: 
+37: 
+38: 
+39: 
+40: 
+41: 
+42: 
+43: 
+44: 
+45: 
+46: 
+47: 
+48: 
+49: 
+50: 
+51: 
+52: 
+53: 
+54: 
+55: 
+56: 
+57: 
+58: 
+59: 
+60: 
+61: 
+62: 
+63: 
+64: 
+65: 
+66: 
+67: abc
+68: 
+69: 
+70: 
+71: 
+72: 
+73: 
+74: 
+75: 
+76: 
+77: 
+78: 
+79: 
+80: 
+81: 
+82: 
+83: 
+84: 
+85: 
+86: 
+87: 
+88: 
+89: 
+90: 
+91: 
+92: 
+93: 
+94: 
+95: 
+96: someWord
+97: 
+98: 
+99: 
+100: 
+
+
+in addEntry helper method with 'bbbb'
+hashedIndex for 'bbbb' is 67
+collision occured at index 67 for 'bbbb'
+offset for 'bbbb just calculated and it is 68
+currentArrayIndex is assigned from hashedIndex which is 67
+just checked index 67 and there was something there so we move to the next location
+just moved to next location which is 34
+found an empty space for 'bbbb' at index 34
+just added 'bbbb' to the array at index 34. now, theArray[34] = bbbb
