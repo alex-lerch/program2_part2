@@ -113,8 +113,18 @@ void Dictionary::addEntry(string* anEntry)
     // increase the size by 1 and rehash if theArray will be over 50 percent full
     if ((arrayCapacity/++arraySize) < 2) {rehash();}
 
+    //asl debug
+    std::cout << "theArray before adding '" << *anEntry << "'" << std::endl;
+    printDictionaryKeys(cout);
+    std::cout << std::endl;
+
     // add the new entry
     addEntry(anEntry, theArray);
+
+    //asl debug
+    std::cout << "theArray after adding '" << *anEntry << "'" << std::endl;
+    printDictionaryKeys(cout);
+    std::cout << std::endl;
 }
 
 
@@ -155,13 +165,13 @@ bool Dictionary::findEntry(const string& key) const
         }
         else { // the word at the hashedIndex of theArray is not the word we're looking for
             // find offset
-            offset = calculateOffset(key, arrayCapacity);
+            offset = calculateOffset(key, doubleHashNums[tableSizesIndex]);
 
             // set the currentArrayIndex to where our original hashedIndex is
             currentArrayIndex = hashedIndex;
 
             // search for an empty space or the key we're tasked with finding
-            while ( ( theArray[currentArrayIndex] != nullptr ) || ( *(theArray[currentArrayIndex]) != key ) ) {
+            while ( ( theArray[currentArrayIndex] != nullptr ) && ( *(theArray[currentArrayIndex]) != key ) ) {
                 currentArrayIndex = (currentArrayIndex + offset) % arrayCapacity;
             }
             if (theArray[currentArrayIndex] == nullptr) { // if the word is not in the dictionary
@@ -219,6 +229,10 @@ void Dictionary::printDictionaryKeys(ostream& outputStream) const
 
     for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
 
+        //asl debug
+        std::cout << "looking at index " << arrayIndex << std::endl;
+
+
         if (theArray[arrayIndex] != nullptr) {
             outputStream << arrayIndex << ": " << *(theArray[arrayIndex]) << "\n";
         }
@@ -226,6 +240,10 @@ void Dictionary::printDictionaryKeys(ostream& outputStream) const
             outputStream << arrayIndex << ": \n";
         }
     }
+
+    //asl debug
+    std::cout << "finished printing the keys of the dictionary" << std::endl;
+
 }
 
 
@@ -363,7 +381,7 @@ unsigned int Dictionary::hash(const std::string& word, int arrayCapacity) const 
 
 /*---------------------------------------------------------------------------------------------------------*
  *                                                                                                         *
- *   Function Name: secondHash                                                                             *
+ *   Function Name: calculateOffset                                                                        *
  *                                                                                                         *
  *   Description:                                                                                          *
  *      second hash function used to calculate an offset                                                   *
@@ -378,7 +396,7 @@ unsigned int Dictionary::hash(const std::string& word, int arrayCapacity) const 
 int Dictionary::calculateOffset(const std::string& word, int arrayCapacity) const{
 
     // return the offset
-    return ((hash(word, arrayCapacity) % doubleHashNums[tableSizesIndex]) + 1);
+    return ((hash(word, doubleHashNums[tableSizesIndex]) + 1));
 }
 
 /*---------------------------------------------------------------------------------------------------------*
@@ -453,6 +471,11 @@ void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray) {
 
         //asl debug
         std::cout << "found an empty space for '" << *anEntry << "' at index " << currentArrayIndex << std::endl;
+
+        //asl debug
+        std::cout << "checking to see if anEntry is a nullptr -> ";
+        std::string result = (anEntry == nullptr) ? "nullptr" : "not nullptr";
+        std::cout << result << std::endl;
 
         // add the new entry to the array
         theArray[currentArrayIndex] = anEntry;

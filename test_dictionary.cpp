@@ -38,11 +38,14 @@ int main()
     myEntry = new string(str);
     myDict->addEntry(myEntry);
 
-    //asl debug
+    //asl debug 
+    /*
+    std::cout << "now trying to find bbbb in thirdDict" << std::endl;
     std::cout << "thirdDict.findEntry(\"bbbb\") returns " << thirdDict.findEntry("bbbb") << std::endl;
     std::cout << "\n'bbbb' just added and thirdDict is " << std::endl;
     thirdDict.printDictionaryKeys(cout);
     std::cout << std::endl;
+    */
 
     str = "mmmm";
     myEntry = new string(str);
