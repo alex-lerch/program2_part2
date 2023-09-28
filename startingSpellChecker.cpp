@@ -67,31 +67,33 @@ int main(int argc, char** argv)
     Dictionary dict;
 
     //asl debug
-    std::cout << "entering buildDictionary" << std::endl;
+    //std::cout << "entering buildDictionary" << std::endl;
 
     // build the dictionary
     buildDictionary(wordListFileName, dict);
 
     //asl debug
-    std::cout << "out of buildDictionary\n\n" << std::endl;
+    //std::cout << "out of buildDictionary\n\n" << std::endl;
+    // printing the dictionary before the spell checking
+    dict.printDictionaryKeys(cerr);
 
     //asl debug
-    std::cout << "entering checkSpelling" << std::endl;
+    //std::cout << "entering checkSpelling" << std::endl;
 
     // write the dictionary to the concordance file
     checkSpelling(inputFileName, dict);
 
     //asl debug
-    std::cout << "out of checkSpelling\n\n" << std::endl;
+    ///std::cout << "out of checkSpelling\n\n" << std::endl;
 
     //asl debug
-    std::cout << "entering writeDictionaryStructure" << std::endl;
+    //std::cout << "entering writeDictionaryStructure" << std::endl;
 
     // write the dictionary structure to the dictionary structure file
     writeDictionaryStructure(dictFileName, dict);
 
     //asl debug
-    std::cout << "out of writeDictionaryStructure\n\n" << std::endl;
+    //std::cout << "out of writeDictionaryStructure\n\n" << std::endl;
 
 } // end of main
 
@@ -187,6 +189,8 @@ void checkSpelling(const string& inFileName, const Dictionary& dict)
             curWord.push_back(curChar);
         }
         else { // curChar is not a letter
+        // findEntry takes just a string I'm not seeing what the problem is here,
+        
             if ( curWord != "" && (!dict.findEntry(curWord)) ) { // if curWord has at least one letter and curWord is not in the dictionary
                 // generate suggestions for word
                 generateSuggestions(curWord, dict, lineNum);

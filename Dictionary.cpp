@@ -17,7 +17,9 @@
  *---------------------------------------------------------------------------------------------------------*/
 #include "Dictionary.h"
 #include <iostream> 
-#include <vector>
+#include <vector> 
+#include <algorithm>
+
 
 
 /*---------------------------------------------------------------------------------------------------------*
@@ -138,7 +140,7 @@ bool Dictionary::findEntry(const string& key) const
 {
 
     //asl debug
-    std::cout << "\n\nin findEntry with '" << key << "'" << std::endl;
+    //std::cout << "\n\nin findEntry with '" << key << "'" << std::endl;
 
     /* variables */
     int hashedIndex; // the initial index that the entry hashes to
@@ -155,7 +157,9 @@ bool Dictionary::findEntry(const string& key) const
     else { // the cell of the array at the hashedIndex is not empty
 
         // if the word at the hashedIndex is the word we're looking for
-        if (*(theArray[hashedIndex]) == key) {
+        cerr << " hashedIndex: " << hashedIndex << std::endl;
+        cerr << " tableSize: " << arrayCapacity << std::endl;
+        if (*(theArray[hashedIndex]) == key) { // this is the line with the problem
             return true;
         }
         else { // the word at the hashedIndex of theArray is not the word we're looking for
@@ -179,7 +183,7 @@ bool Dictionary::findEntry(const string& key) const
     }
 
     //asl debug
-    std::cout << "leaving findEntry with '" << key << "'\n" << std::endl;
+    //std::cout << "leaving findEntry with '" << key << "'\n" << std::endl;
 
 }
 
@@ -333,7 +337,7 @@ void Dictionary::rehash() {
     newCapacity = tableSizes[++tableSizesIndex];
 
     // create temp array used to move over items from the old array 
-    StringPtr* tempArray = new StringPtr[newCapacity];
+    StringPtr* tempArray = new StringPtr[newCapacity] {nullptr}; 
 
     // copy over items from the old array to tempArray
     for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
@@ -344,14 +348,22 @@ void Dictionary::rehash() {
 
 
     // clear the dynamic data from theArray
-    for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
-        if (theArray[arrayIndex] != nullptr) {
-            delete theArray[arrayIndex];
-        }
-    }
+    //for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
+        //if (theArray[arrayIndex] != nullptr) {
+           // delete theArray[arrayIndex]; // here's your problem -- we're copying the existing objects over to the new array-- we can't delete them.
+        //} // i'm trying to understand. oh right right right. i understand now. okay thanks
+    //}
+
+    // we have these objects in one array -- we need the SAME objects in the new array -- we're not making new objects
+    // so we can't delete the old objects
+    // clean that up and see where you are. I will be around
+    
+
+    // you DO need to delete the array, but not its contents
+    delete[] theArray;
 
     // transfer which array theArray points to
-    theArray = tempArray;
+    theArray = tempArray; 
     arrayCapacity = newCapacity;
 
 }
@@ -427,11 +439,14 @@ void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray, int capacityOf
 
     // find hashedIndex
     hashedIndex = hash(*anEntry, capacityOfArrayAddedTo);
+    cerr << " in 3arg addEntry with " << *anEntry << " hashed to index " << hashedIndex << " table size is " << capacityOfArrayAddedTo << std::endl;
 
     // if the cell of the array at the hashedIndex is empty
-    if (theArray[hashedIndex] == nullptr) {
+    if (theArray[hashedIndex] == nullptr) { // valgrind is saying that theArray[hashedIndex] has not been initialized here
+    // this is called from rehash, so that probably means that rehash is not properly initializing the array.
 
         theArray[hashedIndex] = anEntry;
+        //cerr << *anEntry << " added at index " << hashedIndex << endl;
     }
     else { // the cell of the array at the hashedIndex is not empty
 
@@ -449,5 +464,6 @@ void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray, int capacityOf
 
         // add the new entry to the array
         theArray[currentArrayIndex] = anEntry;
+        //cerr << *anEntry << " added at index " << currentArrayIndex << " after collision" << endl;
     }
 }

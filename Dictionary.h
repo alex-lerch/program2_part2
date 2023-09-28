@@ -114,6 +114,7 @@ private:
     // second hash function used to calculate an offset
     int calculateOffset(const std::string& word, int arrayCapacity) const;
 
+    // helper method for addEntry
     void addEntry(StringPtr anEntry, StringPtr* theArray, int capacityOfArrayAddedTo);
 
 };
