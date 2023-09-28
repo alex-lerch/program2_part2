@@ -66,14 +66,32 @@ int main(int argc, char** argv)
     // set up the dictionary
     Dictionary dict;
 
+    //asl debug
+    std::cout << "entering buildDictionary" << std::endl;
+
     // build the dictionary
     buildDictionary(wordListFileName, dict);
+
+    //asl debug
+    std::cout << "out of buildDictionary\n\n" << std::endl;
+
+    //asl debug
+    std::cout << "entering checkSpelling" << std::endl;
 
     // write the dictionary to the concordance file
     checkSpelling(inputFileName, dict);
 
+    //asl debug
+    std::cout << "out of checkSpelling\n\n" << std::endl;
+
+    //asl debug
+    std::cout << "entering writeDictionaryStructure" << std::endl;
+
     // write the dictionary structure to the dictionary structure file
     writeDictionaryStructure(dictFileName, dict);
+
+    //asl debug
+    std::cout << "out of writeDictionaryStructure\n\n" << std::endl;
 
 } // end of main
 
@@ -118,8 +136,10 @@ void buildDictionary(const string& inFileName, Dictionary& dict)
         else { // curChar is not a-z
             // if curWord is not empty
             if (curWord != "") {
+
                 // add curWord to the dictionary
                 dict.addEntry(new std::string(curWord));
+
             }
             // reset curWord
             curWord = "";

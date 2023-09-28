@@ -17,6 +17,7 @@
  *---------------------------------------------------------------------------------------------------------*/
 #include "Dictionary.h"
 #include <iostream> 
+#include <vector>
 
 
 /*---------------------------------------------------------------------------------------------------------*
@@ -114,7 +115,7 @@ void Dictionary::addEntry(string* anEntry)
     if ((arrayCapacity/++arraySize) < 2) {rehash();}
 
     // add the new entry
-    addEntry(anEntry, theArray);
+    addEntry(anEntry, theArray, arrayCapacity);
 }
 
 
@@ -135,6 +136,10 @@ void Dictionary::addEntry(string* anEntry)
  *---------------------------------------------------------------------------------------------------------*/
 bool Dictionary::findEntry(const string& key) const
 {
+
+    //asl debug
+    std::cout << "\n\nin findEntry with '" << key << "'" << std::endl;
+
     /* variables */
     int hashedIndex; // the initial index that the entry hashes to
     int offset; // the number of cells we move forward if there is a collision
@@ -172,6 +177,10 @@ bool Dictionary::findEntry(const string& key) const
             }
         }
     }
+
+    //asl debug
+    std::cout << "leaving findEntry with '" << key << "'\n" << std::endl;
+
 }
 
 
@@ -192,7 +201,24 @@ bool Dictionary::findEntry(const string& key) const
  *---------------------------------------------------------------------------------------------------------*/
 void Dictionary::printDictionaryInOrder(ostream& outputStream) const
 {
+    /* convert dynamic array to a vector */
+    // create and initialize vector
+    vector<std::string> vectorArray;
 
+    // copy items from theArray to vectorArray
+    for (int currentIndex = 0; currentIndex < arrayCapacity; currentIndex++) {
+        if (theArray[currentIndex] != nullptr) {
+            vectorArray.push_back(*theArray[currentIndex]);
+        }
+    }
+
+    // use STL sort to sort the vector
+    std::sort(vectorArray.begin(), vectorArray.end());
+
+    // print the vector
+    for (std::string word : vectorArray) {
+        outputStream << word << "\n";
+    }
 }
 
 
@@ -312,9 +338,10 @@ void Dictionary::rehash() {
     // copy over items from the old array to tempArray
     for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
         if (theArray[arrayIndex] != nullptr) {
-            addEntry(theArray[arrayIndex], tempArray);
+            addEntry(theArray[arrayIndex], tempArray, newCapacity);
         }
     }
+
 
     // clear the dynamic data from theArray
     for (int arrayIndex = 0; arrayIndex < arrayCapacity; arrayIndex++) {
@@ -325,6 +352,7 @@ void Dictionary::rehash() {
 
     // transfer which array theArray points to
     theArray = tempArray;
+    arrayCapacity = newCapacity;
 
 }
 
@@ -390,7 +418,7 @@ int Dictionary::calculateOffset(const std::string& word, int arrayCapacity) cons
  *   Postcondition: none                                                                                   *
  *                                                                                                         *
  *---------------------------------------------------------------------------------------------------------*/
-void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray) {
+void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray, int capacityOfArrayAddedTo) {
 
     /* variables */
     int hashedIndex; // the initial index that the entry hashes to
@@ -398,7 +426,7 @@ void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray) {
     int currentArrayIndex; // the current index we are working with in theArray
 
     // find hashedIndex
-    hashedIndex = hash(*anEntry, arrayCapacity);
+    hashedIndex = hash(*anEntry, capacityOfArrayAddedTo);
 
     // if the cell of the array at the hashedIndex is empty
     if (theArray[hashedIndex] == nullptr) {
@@ -408,7 +436,7 @@ void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray) {
     else { // the cell of the array at the hashedIndex is not empty
 
         // find offset
-        offset = calculateOffset(*anEntry, arrayCapacity);
+        offset = calculateOffset(*anEntry, capacityOfArrayAddedTo);
 
         // set the currentArrayIndex to where our original hashedIndex is
         currentArrayIndex = hashedIndex;
@@ -416,7 +444,7 @@ void Dictionary::addEntry(StringPtr anEntry, StringPtr* theArray) {
         // search for an empty space to put the new entry
         while (theArray[currentArrayIndex] != nullptr) { // while the cell is not empty
 
-            currentArrayIndex = (currentArrayIndex + offset) % arrayCapacity;
+            currentArrayIndex = (currentArrayIndex + offset) % capacityOfArrayAddedTo;
         }
 
         // add the new entry to the array
