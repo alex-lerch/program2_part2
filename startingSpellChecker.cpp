@@ -116,7 +116,7 @@ void buildDictionary(const string& inFileName, Dictionary& dict)
         }
         else { // curChar is not a-z
             // if curWord is not empty
-            if (curWord != "") {
+            if (curWord != "" && (!dict.findEntry(curWord))) {
 
                 // add curWord to the dictionary
                 dict.addEntry(new std::string(curWord));
